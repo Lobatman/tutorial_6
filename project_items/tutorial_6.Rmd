@@ -1,0 +1,405 @@
+---
+title: | 
+  ![](https://i.imgur.com/SWWUQpP.png){width=500px style="display: block; margin:0 auto;"} 
+  Tutorial 6: Medidas de dispersão
+author: "Victor Lobato dos Santos"
+output:
+  html_document:
+    highlight: haddock
+    includes:
+      in_header: "fever_icon.html"
+    theme: flatly
+    number_sections: yes
+    toc: yes
+    toc_float:
+      collapsed: yes
+      smooth_scroll: yes
+  pdf_document:
+    toc: yes
+---
+
+<div class="text-justify"> 
+
+# Medidas de dispersão  
+  
+A partir de agora, aprenderemos a realizar calculos sobre medidas de dispersão através do Rstudio.  
+
+## Amplitude Total  
+Para descobrir uma amplitude total, basta calcularmos o valor máximo menos o valor mínimo de uma amostra.  
+
+Vamos supor que você queira descobrir a amplitude total presente em uma tabela de dados que compõem a altura em centímetros de 3 grupos.  
+Para demonstrar este exemplo, vamos criar um data.frame: 
+
+```{r, message=FALSE, warning=FALSE}
+dados_coluna_1 <- c(185, 185, 185)
+dados_coluna_2 <- c(182, 184, 189)
+dados_coluna_3 <- c(172, 180, 199)
+
+amplitude_exemplo <- data.frame(
+  altura_cm_A = dados_coluna_1,
+  altura_cm_B = dados_coluna_2,
+  altura_cm_C = dados_coluna_3
+)
+
+```
+
+```{r, message=FALSE,warning=FALSE, echo=FALSE}
+library(kableExtra)
+library(knitr)
+
+kable(amplitude_exemplo) %>%
+  kable_classic(full_width = F, html_font = "Cambria") %>%
+  kable_styling(bootstrap_options = "condensed") %>%
+  kable_styling(bootstrap_options = "condensed")
+
+
+```
+
+Com o data.frame criado, vamos calcular a amplitude total de uma das colunas:  
+
+```{r, message=FALSE, warning=FALSE}
+amplitude_total_B <- max(amplitude_exemplo$altura_cm_B) - min(amplitude_exemplo$altura_cm_B)
+
+amplitude_total_B
+```
+Perceba que para descobrir a amplitude total de forma simples, utilizamos a função ``max``, selecionando o valor máximo coluna desejada e em seguida utilizamos o sinal de subtração e a função ``min`` para selecionar o valor mínimo da coluna desejada. O Resultado é a amplitude máxima (em centímetros), da coluna B.  
+
+# Variância  
+
+Em uma amostra, a variância é definida pela razão entre a soma dos quadrados dos desvios em relação a média e o número de observações menos um (grau de liberdade). A fórmula proposta para variância é:  
+
+$$v (x) = s^2 = \frac{ \sum_{i=1}^{n}(xi - \bar{x})^2}{n -1} = \frac{\sum_{i=1}^{n} (\frac{\sum_{i=1}^{n} xi}{n})^2}{n -1}$$
+No R, podemos calcular a variância a partir da função ``var``.  
+Para exemplificar, vamos calcular a variância da segunda coluna de nossa tabela *amplitude_exemplo*.  
+
+```{r, message=FALSE, warning=FALSE}
+varianca_coluna_B <- var(amplitude_exemplo$altura_cm_B)
+
+varianca_coluna_B
+```
+A partir da função ``var`` conseguimos calcular de maneira simples a variância e, como visto no exemplo, a variância da coluna B é igual a 13.  
+  
+### Variância para dados agrupados em classes  
+
+Com base no mesmo conceito de variância, a fórmula matemática da variância para dados agrupados em classes é:  
+
+$$s^2 \frac{\sum_{i=1}^{n} fixi^2 - \frac{(\sum_{i=1}^{n} fixi)^2}{\sum_{i=1}^{n} fi}}{\sum_{i=1}^{n} fi - 1}$$
+Onde **fi** é a frequência da classe e **xi** é o ponto médio da classe.  
+
+Para calcular a variância de dados agrupados em classes no Rstudio, vamos utilizar a tabela de frequência já citada neste e no tutorial anterior. Lembra da forma de construção da tabela de frequências que aprendemos no tutorial 2, no tópico **7.1 Passo 1: Criando e transformando os dados de uma tabela**. Iremos relembrar os passos da criação dela aqui, para calcularmos a variância.  
+Portanto, vamos nos atentar aos passos de construção da tabela de frequências. Caso queira relembrar a explicação, visite o **tutorial 2: O que é estatística? Unidade, dado estatístico e variáveis**, no tópico **7.1**  
+
+```{r, echo=TRUE, message=FALSE}
+qtd_albumina <- c(5.1, 5, 5.2, 4.5, 4.8, 4.9, 5, 5.2, 5.4, 5.1, 4.9, 5, 4.9, 5.1, 5.3, 5.1, 5.1, 5.3, 4.7, 5.3, 4.7, 5.4, 5, 5.5, 5)
+
+sort(qtd_albumina) #ordena os dados
+range(qtd_albumina) #descobre o menor e o maior número
+
+amp_total <- ceiling(max(qtd_albumina)-min(qtd_albumina))
+
+
+k <- nclass.FD(qtd_albumina)
+
+length(qtd_albumina)
+k <- ceiling((sqrt(length(qtd_albumina))))
+
+c <- amp_total / (k-1)
+
+infclass <- min(qtd_albumina)
+
+supclass <- infclass + (k*c)
+
+
+brk <- seq(infclass,supclass,c)
+
+tabela_freq_albumina_t <- table(cut(qtd_albumina,breaks = brk, right = FALSE))
+
+tabela_freq_albumina <- prop.table(tabela_freq_albumina_t)
+```
+
+Seguindo os passos de criação deste exemplo de tabela de frequências, precisamos descobrir quais são os pontos médios de cada classe. Para isso, utilizaremos a seguinte função:  
+
+```{r, message=FALSE, warning=FALSE}
+ponto_medio_classes <- (brk[-1] + brk[-length(brk)]) / 2
+ponto_medio_classes
+```
+Para calcular o ponto médio de cada uma das classes da nossa tabela, seguimos os seguintes passos:  
+
+* **Passo 1:** Utilizamos a variável *brk* que continha os limites das classes. Lembrando que esses limites foram calculados anteriormente utilizando a função `seq()` para criar intervalos entre o limite inferior e o limte superior.  
+
+* **Passo 2:** a partir do código `(brk[-1] + brk[-length(brk)]) / 2` nós fizemos uma "adição vetorial" entre dois subcojuntos da nossa variável *brk*. 
+
++ Em `brk[-1]` nós temos todos os elementos que estão dentro de *brk* com exceção do primeiro, que  representa o limite inferior da classe.  
+
++ Em `brk[-length(brk)]` nós apresentamos todos os elementos que estão presentes dentro da variável **brk**, com exceção do último, que representa o limite superior da última classe.  
+
++ A partir destes dois subconjuntos, nós utilizamos o sinal de soma para somar o limite inferior e o limite superior  
+
+* **Passo 3:** Por fim, nós dividimos por 2 (`/ 2`) para descobrir o ponto médio de cada uma das classes. Como temos um conjunto com cinco classes, este cálculo é feito para cada uma das classes.  
+
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(knitr)
+library(kableExtra)
+
+
+tabela_formatada <- data.frame(FrequenciaAbsoluta = as.vector(tabela_freq_albumina_t),
+                               FrequenciaRelativa = as.vector(tabela_freq_albumina),
+                               xi = as.vector(ponto_medio_classes))
+tabela_formatada <- cbind(Intervalo = names(tabela_freq_albumina_t), tabela_formatada)
+kable(tabela_formatada, align = "c") %>%
+  kable_classic(full_width = F, html_font = "Cambria") %>%
+  kable_styling(bootstrap_options = "condensed") %>%
+  kable_styling(bootstrap_options = "condensed")
+```
+
+Com o entendimento de como calcular o ponto médio da classe (xi) a partir de uma tabela de frequência relativa. Podemos seguir para os próximos passos para encontrar a variância de dados agrupados em classes.  
+  
+Primeiro vamos calcular **fixi**:  
+
+```{r, message=FALSE, warning=FALSE}
+soma_fixi <- sum(tabela_freq_albumina_t * ponto_medio_classes)
+soma_fixi
+
+```
+Neste passo, para descobrir a soma da multiplicação de **fi** e **xi**, nós utilizamos a função ``sum``, coletamos a variável referente a nossa frequência absoluta que tem o nome de *tabela_freq_albumina_t* e multiplicamos pela variável referente ao ponto médio das classes, que tem como nome *ponto_medio_classes*. O resultado de 127.375 indica o a soma de nosso *fixi*.  
+
+Em seguida, vamos calcular o quadrado da soma de fi(xi)²:
+
+```{r, message=FALSE, warning=FALSE}
+fixi_quadrado <- sum((tabela_freq_albumina_t * (ponto_medio_classes)^2))
+fixi_quadrado
+```
+Sabendo que o primeiro passo da fórmula matemática é $\sum_{i=1}^{n}fixi^2$, para descobrir calcular o quadrado da soma de fi(xi)², seguimos de forma parecida no cálculo da soma de fixi, com a diferença de que aqui colocamos a variável *ponto_medio_classes* elevado ao quadrado. O resultado é o valor desta soma
+
+Agora, vamos calcular a soma de nosso fi:  
+
+```{r, message=FALSE, warning=FALSE}
+soma_fi <- sum(tabela_freq_albumina_t)
+soma_fi
+```
+Aqui, para somar a nossa frequência absoluta da classe (fi) de todas as frequências, basta utilizar a função ``sum`` e incluir a variável relacionada a frequência absoluta da classe.  
+  
+Agora, com nossas variáveis *soma_fixi*, *fixi_qudrado* e *soma_fi* preparadas, podemos realizar o cálculo da variância:  
+
+```{r, message=FALSE, warning=FALSE}
+variancia_classes <- (sum(fixi_quadrado - ((soma_fixi)^2 / soma_fi)) / 
+                        (soma_fi - 1))
+variancia_classes
+```
+De acordo com a fórmula para calcular a variância para dados agrupados em classes, e a fórmula criada aqui, para o Rstudio, vamos identificar os passos:  
+
+* **Passo 1 **: Primeiro, nós abrimos nossa fórmula com a função ``sum``, pois queremos que ao final, ocorra a soma de todos os valores calculados ali dentro. Em seguida, atribuimos a variável referente a primeira parte da fórmula matemática ($\sum_{i=1}^{n}fixi^2$) que é *fixi_quadrado* e subtraímos pelo segundo passo da fórmula.  
+
+* **Passo 2**: O segundo passo da fórmula matemática desta variância, se refere a $\frac{(\sum_{i=1}^{n} fixi)^2}{\sum_{i=1}^{n} fi}$. Para isso, nós atribuimos o variável *soma_fixi* que correspondia a somatória de fixi, elevamos ao quadrado (`^2`) e dividmos pela variável *soma_fi* que corresponde a somatória de fi.  
+
+* **Passo 3**: Por fim, seguindo a lógica da fórmula matemática, nós dividimos o resultado dos passos anteriores por $\sum_{i=1}^{n} fi - 1$ que corresponde ao nosso vetor *soma_fi* menos (-) 1.  
+
+O resultado de tudo isso é a variância para dados agrupados em classe, que neste exemplo foi igual a 0.06416667.  
+  
+# Desvio padrão  
+O desvio padrão, nada mais é que a raiz quadrada da variância. Sua fórmula matemática é representada por: 
+
+$$\sqrt{s^2} = \sqrt{\frac{ \sum_{i=1}^{n}(xi - \bar{x})^2}{n -1}} = \sqrt{\frac{\sum_{i=1}^{n} (\frac{\sum_{i=1}^{n} xi}{n})^2}{n -1}}$$
+No R, podemos calcular o desvio padrão através da função ``sd``.
+
+```{r, message=FALSE, warning=FALSE}
+sd_exemplo <- c(20, 30, 40, 50, 60, 70, 80)
+
+desvio_padrao <- sd(sd_exemplo)
+
+desvio_padrao
+```
+## Desvio Padrão para dados agrupados em classes  
+
+Para calcular o desvio padrão para dados agrupados em clases, partimos da mesma lógica do desvio padrão, porém agora aplicado a fórmula para dados agrupados em classes:  
+
+$$s = \sqrt{\frac{\sum_{i=1}^{n} fixi^2 - \frac{(\sum_{i=1}^{n} fixi)^2}{\sum_{i=1}^{n} fi}}{\sum_{i=1}^{n} fi - 1}}$$
+
+Perceba que, a única diferença é a adição da raiz quadrada na fórmula que utilizamos para variância de dados agrupados em classes. Portanto, para calcular o desvio padrão aqui, só precisamos utilizar a função `sqrt` na variável utilizada para calcular a variância de dados agrupados em classes no exemplo anterior.  
+
+```{r, message=FALSE, warning=FALSE}
+sd_classes <- sqrt(variancia_classes)
+
+sd_classes
+```
+O resultado será o desvio padrão.  
+
+# Coeficiente de Variação (CV)  
+
+O coeficiente de variação é uma medida de dispersão relativa que expressa o desvio padrão (s) em porcentagem da média ($\bar{x}$). Temos que, quanto mais alto o CV, maior será a dispersão dos dados em relação à média (dispersão relativa alta) e, quanto mais baixo o CV, menor será a dispersão dos dados em relação a média (dispersão relativa baixa).  
+A fórmula matemática do coeficiente de variação é:  
+
+$$CV = \frac{s}{\bar{x}} * 100$$
+
+Com base na fórmula, no RStudio, podemos calcular o coeficiente de variação a partir da divisão entre o resultado do desvio padrão, pela média, multiplicado por 100 (desvio_padrao / media) * 100.  
+Vamos criar um exemplo rápido aqui de dados não agrupados, mas que também pode ser aplicado a dados agrupados, basta seguir os passos anteriores relacionados.  
+
+```{r, message=FALSE, warning=FALSE}
+cv_exemplo <- c(20, 30, 40, 50, 60, 70, 80)
+
+media_cv <- mean(cv_exemplo)
+media_cv
+
+desvio_padrao_cv <- sd(cv_exemplo)
+desvio_padrao_cv
+
+coef_variacao <- (desvio_padrao_cv / media_cv) * 100
+
+coef_variacao
+```
+Neste exemplo, nós criamos um vetor contendo 7 dados distintos, em seguida calculamos a média deste vetor através da função `mean`, calculamos o desvio padrão a partir da função `sd` e por fim, criamos uma variável onde dividimos o resultado do desvio padrão, contido na variável *desvio_padrao_cv* pelo resultado de média resultante da variável *media_cv* e múltiplicamos por 100. O resultado de 43.204 é o nosso coeficiente de variação.  
+
+# Erro padrão da Média (EP)  
+
+O erro padrão da média, é uma medida que informa a precisão em que a média da população foi estimada. Sua fórmula matemática é dada por:  
+
+$$s(\bar{x}) = s\hat{m} = EP = \frac{s}{\sqrt{n}}$$  
+
+
+* $s(\bar{x})$: erro padrão;  
+
+* s = desvio padrão; 
+
+* n = tamanho da amostra.  
+
+Para exemplificar, vamos utilizar o mesmo conjunto de dados do exemplo anterior:  
+
+```{r, message=FALSE, warning=FALSE}
+ep_exemplo <- c(20, 30, 40, 50, 60, 70, 80)
+
+tamanho_amostra_ep <- length(ep_exemplo)
+tamanho_amostra_ep
+
+media_ep <- mean(ep_exemplo)
+media_ep
+
+desvio_padrao_ep <- sd(ep_exemplo)
+desvio_padrao_ep
+
+erro_padrao_media <- desvio_padrao_ep / sqrt(tamanho_amostra_ep)
+erro_padrao_media
+```
+Neste exemplo, primeiro nós criamos um vetor contendo 7 dados distintos, em seguida utilizamos a função `length` para descobrir o tamanho da amostra (n), calculamos a média dos dados a partir da função `mean`, calculamos o desvio padrão dos dados a partir da função `sd`, e por fim, criamos uma variável dividindo a variável referente ao resultado do desvio padrão (*desvio_padrao_ep*), pela raiz quadrada da variável referente ao resultado do tamanho da amostra (*erro_padrao_media*). O resultado 8.164 é o nosso erro padrão da média.  
+
+### Apresentando os dados Graficamente  
+
+Uma forma interessante de apresentar os dados de um erro padrão da média, é através de gráficos. Para isso nós podemos criar um gráfico de barras com as linhas de erro a partir do nosso exemplo.
+
+```{r, message=FALSE, warning=FALSE}
+# Carregando a biblioteca ggplot2
+library(ggplot2)
+
+# Criando os dados
+media1 <- c(1,2,3,4,5)
+media2 <- c(2,4,6,8,10)
+media3 <- c(10,20,30,40,50)
+
+# Calculando a média
+m1 <- mean(media1)
+m2 <- mean(media2)
+m3 <- mean(media3)
+
+# Calculando o Desvio Padrão
+sm1 <- sd(media1)
+sm2 <- sd(media2)
+sm3 <- sd(media3)
+
+#Criando o Data.Frame
+data_medidas <- data.frame(Medida = c("m1", "m2", "m3"),
+                           Valor = c(m1, m2, m3),
+                           Sd = c(sm1, sm2, sm3))
+
+# Criando o gráfico de barras com linhas de erro
+
+plot_ep_s <- ggplot(data_medidas, 
+                    aes(x = Medida, y = Valor)) +
+  geom_bar(stat = "identity", fill = "#ff8c1a") +
+  geom_errorbar(aes(ymin = Valor - Sd, 
+                    ymax = Valor + Sd), 
+                width = 0.4) +
+  labs(y = "Valor", title = "Comparacao de Medidas") +
+  theme_minimal()
+
+plot_ep_s
+
+```
+
+Vamos entender os passos da criação deste gráfico:  
+
+**Passo 1**:  
+
+* Carregamos a biblioteca *ggplot2* que será responsável por plotar nosso gráfico;  
+
+* **Passo 2**:  
+
+* Criamos três vetores para compor o nosso exemplo, e em seguida, criamos vetores separados de cada um deles para calcular a média e o desvio padrão.
+
+**Passo 2 **:  
+
+* Criamos um data frame a partir da função `data.frame`. O objeto *Medida* contém os nomes que queremos dar aos nosso objetos, enquanto que o objeto *Valor* possui os vetores criados anteriormente para calcular a media, o objeto **Sd** possui desvio padrão .  
+  
+**Passo 3**:
+
+* Para criar o gráfico, primeiro criamos um objeto e abrimos com a função `ggplot`, em seguida adicionamos o nome do data frames que queremos criar um gráfico.  
++ A  função `aes` (aesthetic mapping) é utilizada para mapear as variáveis do nosso conjunto de dados, dessa forma, é a partir dela que definimos as configurações do gráfico;  
++ Definimos os eixos x para medida e y para valor;  
++ A partir da função `geom_bar(stat = "identity")` nós criamos as barras do gráfico de acordo com os valores presentes no data frame;  
++ Definimos a cor de nosso gráfico com a função `fill`. A cor pode ser definida de várias formas.  
++ om a função `geom_error_bar`, nós adicionamos as linhas (barras) do erro padrão da média. Utilizamos o argumento `ymin` para especificar a extremidade inferior da linha de erro e, o argumento `ymax` para especificar a extremidade superior da linha de erro;  
+  
+**Extra**:  
+
+*  O argumento `width` serve para definir a largura do nosso gráfico;  
++ O argumento `labs(y ="")` define o nome que queremos dar no eixo y; 
++ O argfumento `title` define o título que queremos apresentar no gráfico;  
++ Por fim, o argumento `theme_minimal()` é um dos muitos estilos possíveis para se aplificar em um gráfico.  
+  
+# Quartis e intervalo interquartífico  
+
+Os Quartis são valores que dividem seu conjunto de dados em quatro partes.  
+
+* Dentro do primeiro quartil (Q1), é separado o quarto (25%) referente aos dados com valores menores que os demais;  
+
+* O segundo quartil (Q2), se refere a mediana que separa a metade dos dados com valores menores que os demais;  
+
+* O terceiro quartil (Q3), separa o quarto (25%) de dados com valores maiores que os demais.  
+
+Geralmente a representação dos quartis e os intervalos interquartíficos é apresentado através de um gráfico denominado **boxplot** (gráfico de caixas) e, podemos criar este gráfico de várias maneiras através do R. Vamos ver aqui, um exemplo utilizando a função `boxplot` do R Base: 
+
+```{r, message=FALSE, warning=FALSE}
+#Criando o conjunto de dados
+
+exemplo_boxplot <- c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+
+# Criando o boxplot
+boxplot(exemplo_boxplot)
+
+```
+  
+
+De forma simples, utilizando a função `boxplot` presente no R base, nós fizemos um boxplot. Seguindo a lógica dos quartis, a linha inferior representa o primeiro quartil, a linha média representa o segundo quartil e a linha superior representa o terceiro quartil.  
+Lembrando que, essa á apenas uma opção simples de criar um boxplot, existem diferentes maneiras para construção do mesmo.  
+
+# Referências
+
+* Wickham H, François R, Henry L, Müller K, Vaughan D (2023). _dplyr: A Grammar of Data Manipulation_. R package version 1.1.3, <https://CRAN.R-project.org/package=dplyr>.  
+  
+* Wickham H (2023). _forcats: Tools for Working with Categorical Variables (Factors)_. R package version 1.0.0, <https://CRAN.R-project.org/package=forcats>.  
+
+* Wickham H, Henry L (2023). _purrr: Functional Programming Tools_. R package version 1.0.2, <https://CRAN.R-project.org/package=purrr>.  
+
+* Wickham H, Hester J, Bryan J (2023). _readr: Read Rectangular Text Data_. R package version 2.1.4, <https://CRAN.R-project.org/package=readr>.  
+
+*  Wickham H, Averick M, Bryan J, Chang W, McGowan LD, François R, Grolemund G, Hayes A, Henry L,
+  Hester J, Kuhn M, Pedersen TL, Miller E, Bache SM, Müller K, Ooms J, Robinson D, Seidel DP,
+  Spinu V, Takahashi K, Vaughan D, Wilke C, Woo K, Yutani H (2019). “Welcome to the tidyverse.”
+  _Journal of Open Source Software_, *4*(43), 1686. doi:10.21105/joss.01686
+  <https://doi.org/10.21105/joss.01686>  
+  
+* H. Wickham. ggplot2: Elegant Graphics for Data Analysis. Springer-Verlag New York, 2016.  
+* Zhu H (2021). _kableExtra: Construct Complex Table with 'kable' and Pipe Syntax_. R package version 1.3.4, <https://CRAN.R-project.org/package=kableExtra>.  
+
+* Xie Y (2023). _knitr: A General-Purpose Package for Dynamic Report Generation in R_. R package version 1.45, <https://yihui.org/knitr/>.
+</div>
